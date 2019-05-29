@@ -1,1 +1,90 @@
 package damap
+
+import (
+	"testing"
+)
+
+func TestExactMatchSearch(t *testing.T) {
+	keys := []string{"Lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit", "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore", "magna", "aliqua", "Ut", "enim", "ad", "minim", "veniam", "quis", "nostrud", "exercitation", "ullamco", "laboris", "nisi", "ut", "aliquip", "ex", "ea", "commodo", "consequat", "Duis", "aute", "irure", "dolor", "in", "reprehenderit", "in", "voluptate", "velit", "esse", "cillum", "dolore", "eu", "fugiat", "nulla", "pariatur", "Excepteur", "sint", "occaecat", "cupidatat", "non", "proident", "sunt", "in", "culpa", "qui", "officia", "deserunt", "mollit", "anim", "id", "est", "laborum"}
+	tests := []struct {
+		in  string
+		out bool
+	}{
+		{"Lorem", true},
+		{"ipsum", true},
+		{"dolor", true},
+		{"sit", true},
+		{"amet", true},
+		{"consectetur", true},
+		{"adipiscing", true},
+		{"elit", true},
+		{"sed", true},
+		{"do", true},
+		{"eiusmod", true},
+		{"tempor", true},
+		{"incididunt", true},
+		{"ut", true},
+		{"labore", true},
+		{"et", true},
+		{"dolore", true},
+		{"magna", true},
+		{"aliqua", true},
+		{"Lore", false},
+		{"lorem", false},
+		{"ipsu", false},
+		{"olor", false},
+		{"i", false},
+	}
+
+	d := New()
+	for _, key := range keys {
+		d.Write(key, nil)
+	}
+
+	for _, test := range tests {
+		t.Run(test.in, func(t *testing.T) {
+			result := d.ExactMatchSearch(test.in)
+
+			if result != test.out {
+				t.Errorf("got %t, want %t", result, test.out)
+			}
+		})
+	}
+}
+
+func TestCommonPrefixSearch(t *testing.T) {
+	d := New()
+	d.Write("pine", "foo")
+	d.Write("apple", "bar")
+	d.Write("pineapple", "foobar")
+
+	test := struct {
+		in  string
+		out CommonPrefixSearchResult
+	}{
+		"I have a pineapple.",
+		[]struct {
+			Pos int
+			Val interface{}
+		}{
+			{9, "foo"},
+			{9, "foobar"},
+			{13, "bar"},
+		},
+	}
+
+	t.Run(test.in, func(t *testing.T) {
+		ok := true
+		result := d.CommonPrefixSearch(test.in)
+
+		for i, r := range result {
+			if test.out[i] != r {
+				ok = false
+			}
+		}
+
+		if !ok {
+			t.Errorf("got %v, want %v", result, test.out)
+		}
+	})
+}
