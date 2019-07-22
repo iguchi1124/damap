@@ -195,8 +195,9 @@ func (d *DaMap) ExactMatchSearch(key string) bool {
 
 // CommonPrefixSearchResult is a value that return from CommonPrefixSearch function.
 type CommonPrefixSearchResult []struct {
-	Pos int
-	Val interface{}
+	Pos   int
+	Key   string
+	Value interface{}
 }
 
 // CommonPrefixSearch provides common prefix search functions for trie tree.
@@ -209,7 +210,7 @@ func (d *DaMap) CommonPrefixSearch(s string) CommonPrefixSearchResult {
 
 	for pos := 0; pos < len(s); pos++ {
 		i := 0
-		for _, k := range s[pos:] {
+		for j, k := range s[pos:] {
 			n := d.Base[i] + int(k) - 1
 
 			if len(d.Base) < n+1 {
@@ -225,11 +226,13 @@ func (d *DaMap) CommonPrefixSearch(s string) CommonPrefixSearchResult {
 				result = append(
 					result,
 					struct {
-						Pos int
-						Val interface{}
+						Pos   int
+						Key   string
+						Value interface{}
 					}{
-						Pos: pos,
-						Val: d.Value[leaf],
+						Pos:   pos,
+						Key:   string(s[pos : pos+j+1]),
+						Value: d.Value[leaf],
 					},
 				)
 			}

@@ -64,12 +64,13 @@ func TestCommonPrefixSearch(t *testing.T) {
 	}{
 		"I have a pineapple.",
 		[]struct {
-			Pos int
-			Val interface{}
+			Pos   int
+			Key   string
+			Value interface{}
 		}{
-			{9, "foo"},
-			{9, "foobar"},
-			{13, "bar"},
+			{9, "pine", "foo"},
+			{9, "pineapple", "foobar"},
+			{13, "apple", "bar"},
 		},
 	}
 
