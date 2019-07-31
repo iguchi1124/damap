@@ -13,7 +13,7 @@ type DaMap struct {
 // New creates a new empty DaMap.
 func New() *DaMap {
 	d := &DaMap{}
-	d.allocMinSize(1)
+	d.alloc(1)
 
 	return d
 }
@@ -21,12 +21,13 @@ func New() *DaMap {
 // Write is used to insert value with key.
 func (d *DaMap) Write(key string, value interface{}) {
 	s := []rune(key)
-	s = append(s, endKey)
 
 	i := 0
 	for _, k := range s {
 		i = d.insert(i, k)
 	}
+
+	i = d.insert(i, endKey)
 
 	d.value[i] = value
 }
@@ -38,7 +39,7 @@ func (d *DaMap) insert(i int, k rune) int {
 	}
 
 	n := base + int(k) - 1
-	d.allocMinSize(n + 1)
+	d.alloc(n + 1)
 
 	if d.check[n] == 0 && d.base[n] == 0 {
 		d.base[i] = base
@@ -86,9 +87,12 @@ func (d *DaMap) insert(i int, k rune) int {
 		ok := true
 		for _, k := range s {
 			next := base + int(k) - 1
-			d.allocMinSize(next + 1)
+			d.alloc(next + 1)
 
-			ok = ok && d.check[next] == 0 && d.base[next] == 0
+			if d.check[next] != 0 || d.base[next] != 0 {
+				ok = false
+				break
+			}
 		}
 
 		if ok {
@@ -121,29 +125,11 @@ func (d *DaMap) insert(i int, k rune) int {
 	return n
 }
 
-func (d *DaMap) allocMinSize(size int) {
+func (d *DaMap) alloc(size int) {
 	if len(d.base) < size {
-		if cap(d.base) < size {
-			d.base = append(d.base, make([]int, size-len(d.base))...)
-		} else {
-			d.base = d.base[:size]
-		}
-	}
-
-	if len(d.check) < size {
-		if cap(d.check) < size {
-			d.check = append(d.check, make([]int, size-len(d.check))...)
-		} else {
-			d.check = d.check[:size]
-		}
-	}
-
-	if len(d.value) < size {
-		if cap(d.value) < size {
-			d.value = append(d.value, make([]interface{}, size-len(d.value))...)
-		} else {
-			d.value = d.value[:size]
-		}
+		d.base = append(d.base, make([]int, size-len(d.base))...)
+		d.check = append(d.check, make([]int, size-len(d.check))...)
+		d.value = append(d.value, make([]interface{}, size-len(d.value))...)
 	}
 }
 
