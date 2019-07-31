@@ -5,9 +5,9 @@ const endKey rune = 0
 
 // DaMap is a map data structure based on double-array trie tree.
 type DaMap struct {
-	Base  []int
-	Check []int
-	Value []interface{}
+	base  []int
+	check []int
+	value []interface{}
 }
 
 // New creates a new empty DaMap.
@@ -28,25 +28,25 @@ func (d *DaMap) Write(key string, value interface{}) {
 		i = d.insert(i, k)
 	}
 
-	d.Value[i] = value
+	d.value[i] = value
 }
 
 func (d *DaMap) insert(i int, k rune) int {
 	base := 1
-	if d.Base[i] != 0 {
-		base = d.Base[i]
+	if d.base[i] != 0 {
+		base = d.base[i]
 	}
 
 	n := base + int(k) - 1
 	d.allocMinSize(n + 1)
 
-	if d.Check[n] == 0 && d.Base[n] == 0 {
-		d.Base[i] = base
-		d.Check[n] = i + 1
+	if d.check[n] == 0 && d.base[n] == 0 {
+		d.base[i] = base
+		d.check[n] = i + 1
 		return n
 	}
 
-	if d.Check[n] == i+1 {
+	if d.check[n] == i+1 {
 		return n
 	}
 
@@ -57,7 +57,7 @@ func (d *DaMap) insert(i int, k rune) int {
 		value interface{}
 	}
 
-	for index, check := range d.Check {
+	for index, check := range d.check {
 		if check == i+1 {
 			conflicts = append(
 				conflicts,
@@ -68,9 +68,9 @@ func (d *DaMap) insert(i int, k rune) int {
 					value interface{}
 				}{
 					index,
-					d.Base[index],
+					d.base[index],
 					check,
-					d.Value[index],
+					d.value[index],
 				},
 			)
 		}
@@ -78,7 +78,7 @@ func (d *DaMap) insert(i int, k rune) int {
 
 	s := []rune{k}
 	for _, conflict := range conflicts {
-		s = append(s, rune(conflict.index+1-d.Base[i]))
+		s = append(s, rune(conflict.index+1-d.base[i]))
 	}
 
 	for {
@@ -88,7 +88,7 @@ func (d *DaMap) insert(i int, k rune) int {
 			next := base + int(k) - 1
 			d.allocMinSize(next + 1)
 
-			ok = ok && d.Check[next] == 0 && d.Base[next] == 0
+			ok = ok && d.check[next] == 0 && d.base[next] == 0
 		}
 
 		if ok {
@@ -97,52 +97,52 @@ func (d *DaMap) insert(i int, k rune) int {
 	}
 
 	for _, conflict := range conflicts {
-		next := base + conflict.index + 1 - d.Base[i] - 1
-		d.Base[next] = conflict.base
-		d.Value[next] = conflict.value
-		d.Check[next] = i + 1
+		next := base + conflict.index + 1 - d.base[i] - 1
+		d.base[next] = conflict.base
+		d.value[next] = conflict.value
+		d.check[next] = i + 1
 
-		for index, check := range d.Check {
+		for index, check := range d.check {
 			if check == conflict.index+1 {
-				d.Check[index] = next + 1
+				d.check[index] = next + 1
 			}
 		}
 
-		d.Base[conflict.index] = 0
-		d.Check[conflict.index] = 0
-		d.Value[conflict.index] = nil
+		d.base[conflict.index] = 0
+		d.check[conflict.index] = 0
+		d.value[conflict.index] = nil
 	}
 
-	d.Base[i] = base
+	d.base[i] = base
 
 	n = base + int(k) - 1
-	d.Check[n] = i + 1
+	d.check[n] = i + 1
 
 	return n
 }
 
 func (d *DaMap) allocMinSize(size int) {
-	if len(d.Base) < size {
-		if cap(d.Base) < size {
-			d.Base = append(d.Base, make([]int, size-len(d.Base))...)
+	if len(d.base) < size {
+		if cap(d.base) < size {
+			d.base = append(d.base, make([]int, size-len(d.base))...)
 		} else {
-			d.Base = d.Base[:size]
+			d.base = d.base[:size]
 		}
 	}
 
-	if len(d.Check) < size {
-		if cap(d.Check) < size {
-			d.Check = append(d.Check, make([]int, size-len(d.Check))...)
+	if len(d.check) < size {
+		if cap(d.check) < size {
+			d.check = append(d.check, make([]int, size-len(d.check))...)
 		} else {
-			d.Check = d.Check[:size]
+			d.check = d.check[:size]
 		}
 	}
 
-	if len(d.Value) < size {
-		if cap(d.Value) < size {
-			d.Value = append(d.Value, make([]interface{}, size-len(d.Value))...)
+	if len(d.value) < size {
+		if cap(d.value) < size {
+			d.value = append(d.value, make([]interface{}, size-len(d.value))...)
 		} else {
-			d.Value = d.Value[:size]
+			d.value = d.value[:size]
 		}
 	}
 }
@@ -158,14 +158,14 @@ func (d *DaMap) Read(key string) interface{} {
 
 	i := 0
 	for _, k := range s {
-		n := d.Base[i] + int(k) - 1
-		if d.Check[n] != i+1 {
+		n := d.base[i] + int(k) - 1
+		if d.check[n] != i+1 {
 			return nil
 		}
 		i = n
 	}
 
-	return d.Value[i]
+	return d.value[i]
 }
 
 // ExactMatchSearch provides exact-match-search function for trie tree.
@@ -179,14 +179,14 @@ func (d *DaMap) ExactMatchSearch(key string) bool {
 
 	i := 0
 	for _, k := range s {
-		n := d.Base[i] + int(k) - 1
-		if d.Check[n] != i+1 {
+		n := d.base[i] + int(k) - 1
+		if d.check[n] != i+1 {
 			return false
 		}
 		i = n
 	}
 
-	if d.Base[i] != 0 {
+	if d.base[i] != 0 {
 		return false
 	}
 
@@ -211,18 +211,18 @@ func (d *DaMap) CommonPrefixSearch(s string) CommonPrefixSearchResult {
 	for pos := 0; pos < len(s); pos++ {
 		i := 0
 		for j, k := range s[pos:] {
-			n := d.Base[i] + int(k) - 1
+			n := d.base[i] + int(k) - 1
 
-			if len(d.Base) < n+1 {
+			if len(d.base) < n+1 {
 				break
 			}
 
-			if d.Check[n] != i+1 {
+			if d.check[n] != i+1 {
 				break
 			}
 
-			leaf := d.Base[n] + int(endKey) - 1
-			if d.Base[leaf] == 0 && d.Check[leaf] == n+1 {
+			leaf := d.base[n] + int(endKey) - 1
+			if d.base[leaf] == 0 && d.check[leaf] == n+1 {
 				result = append(
 					result,
 					struct {
@@ -232,7 +232,7 @@ func (d *DaMap) CommonPrefixSearch(s string) CommonPrefixSearchResult {
 					}{
 						Pos:   pos,
 						Key:   string(s[pos : pos+j+1]),
-						Value: d.Value[leaf],
+						Value: d.value[leaf],
 					},
 				)
 			}
