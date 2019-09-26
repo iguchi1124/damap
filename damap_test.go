@@ -1,6 +1,7 @@
 package damap
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -75,16 +76,9 @@ func TestCommonPrefixSearch(t *testing.T) {
 	}
 
 	t.Run(test.in, func(t *testing.T) {
-		ok := true
 		result := d.CommonPrefixSearch(test.in)
 
-		for i, r := range result {
-			if test.out[i] != r {
-				ok = false
-			}
-		}
-
-		if !ok {
+		if !reflect.DeepEqual(result, test.out) {
 			t.Errorf("got %v, want %v", result, test.out)
 		}
 	})
