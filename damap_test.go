@@ -83,3 +83,32 @@ func TestCommonPrefixSearch(t *testing.T) {
 		}
 	})
 }
+
+func TestMultiByteTextCommonPrefixSearch(t *testing.T) {
+	d := New()
+	d.Write("こんにちは", "hello")
+	d.Write("さようなら", "bye")
+
+	test := struct {
+		in  string
+		out CommonPrefixSearchResult
+	}{
+		"おはようこんにちはさようなら",
+		[]struct {
+			Pos   int
+			Key   string
+			Value interface{}
+		}{
+			{4, "こんにちは", "hello"},
+			{9, "さようなら", "bye"},
+		},
+	}
+
+	t.Run(test.in, func(t *testing.T) {
+		result := d.CommonPrefixSearch(test.in)
+
+		if !reflect.DeepEqual(result, test.out) {
+			t.Errorf("got %v, want %v", result, test.out)
+		}
+	})
+}

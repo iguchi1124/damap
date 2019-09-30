@@ -1,6 +1,8 @@
 // Package damap provides a map data structure on double-array trie tree and functions to search values from trie tree.
 package damap
 
+import "unicode/utf8"
+
 const endKey rune = 0
 
 // DaMap is a map data structure based on double-array trie tree.
@@ -187,16 +189,17 @@ type CommonPrefixSearchResult []struct {
 }
 
 // CommonPrefixSearch provides common prefix search functions for trie tree.
-func (d *DaMap) CommonPrefixSearch(s string) CommonPrefixSearchResult {
-	result := CommonPrefixSearchResult{}
-
-	if len(s) == 0 {
-		return result
+func (d *DaMap) CommonPrefixSearch(s string) (r CommonPrefixSearchResult) {
+	rl := utf8.RuneCountInString(s)
+	if rl == 0 {
+		return
 	}
 
-	for pos := 0; pos < len(s); pos++ {
+    rs := []rune(s)
+
+	for pos := 0; pos < rl; pos++ {
 		i := 0
-		for j, k := range s[pos:] {
+		for j, k := range rs[pos:] {
 			n := d.base[i] + int(k) - 1
 
 			if len(d.base) < n+1 {
@@ -209,15 +212,15 @@ func (d *DaMap) CommonPrefixSearch(s string) CommonPrefixSearchResult {
 
 			leaf := d.base[n] + int(endKey) - 1
 			if d.base[leaf] == 0 && d.check[leaf] == n+1 {
-				result = append(
-					result,
+				r = append(
+					r,
 					struct {
 						Pos   int
 						Key   string
 						Value interface{}
 					}{
 						Pos:   pos,
-						Key:   string(s[pos : pos+j+1]),
+						Key:   string(rs[pos : pos+j+1]),
 						Value: d.value[leaf],
 					},
 				)
@@ -227,5 +230,5 @@ func (d *DaMap) CommonPrefixSearch(s string) CommonPrefixSearchResult {
 		}
 	}
 
-	return result
+	return
 }
