@@ -195,7 +195,7 @@ func (d *DaMap) CommonPrefixSearch(s string) (r CommonPrefixSearchResult) {
 		return
 	}
 
-    rs := []rune(s)
+	rs := []rune(s)
 
 	for pos := 0; pos < rl; pos++ {
 		i := 0
